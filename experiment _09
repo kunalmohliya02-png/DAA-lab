@@ -1,24 +1,20 @@
-
 #include <iostream>
 #include <vector>
 #include <climits>
 using namespace std;
-
-struct Edge {
-    int u, v, weight;
-};
 
 int main() {
     int V, E;
     cout << "Enter number of vertices and edges: ";
     cin >> V >> E;
 
-    vector<Edge> edges(E);
+    vector<vector<pair<int, int>>> graph(V);
 
     cout << "Enter edges (source destination weight):\n";
-
     for (int i = 0; i < E; i++) {
-        cin >> edges[i].u >> edges[i].v >> edges[i].weight;
+        int u, v, w;
+        cin >> u >> v >> w;
+        graph[u].push_back({v, w});
     }
 
     int source;
@@ -26,61 +22,48 @@ int main() {
     cin >> source;
 
     vector<int> dist(V, INT_MAX);
+    vector<bool> visited(V, false);
+
     dist[source] = 0;
 
-    // Relax all edges V-1 times
-    for (int i = 1; i <= V - 1; i++) {
+    for (int count = 0; count < V - 1; count++) {
+        int u = -1;
 
-        for (auto edge : edges) {
+        // Find vertex with minimum distance
+        for (int i = 0; i < V; i++) {
+            if (!visited[i] &&
+                (u == -1 || dist[i] < dist[u])) {
+                u = i;
+            }
+        }
 
-            int u = edge.u;
-            int v = edge.v;
-            int weight = edge.weight;
+        if (u == -1 || dist[u] == INT_MAX)
+            break;
 
-            if (dist[u] != INT_MAX &&
-                dist[u] + weight < dist[v]) {
+        visited[u] = true;
 
+        // Relax adjacent vertices
+        for (auto edge : graph[u]) {
+            int v = edge.first;
+            int weight = edge.second;
+
+            if (dist[u] + weight < dist[v]) {
                 dist[v] = dist[u] + weight;
             }
         }
     }
 
-    // Check for negative-weight cycle
-    bool negativeCycle = false;
+    cout << "\nShortest distances from source " << source << ":\n";
 
-    for (auto edge : edges) {
+    for (int i = 0; i < V; i++) {
+        cout << source << " -> " << i << " = ";
 
-        int u = edge.u;
-        int v = edge.v;
-        int weight = edge.weight;
+        if (dist[i] == INT_MAX)
+            cout << "INF";
+        else
+            cout << dist[i];
 
-        if (dist[u] != INT_MAX &&
-            dist[u] + weight < dist[v]) {
-
-            negativeCycle = true;
-            break;
-        }
-    }
-
-    if (negativeCycle) {
-        cout << "\nGraph contains a negative-weight cycle.\n";
-    }
-    else {
-        cout << "\nNo negative-weight cycle detected.\n";
-
-        cout << "\nShortest distances from source "
-             << source << ":\n";
-
-        for (int i = 0; i < V; i++) {
-            cout << source << " -> " << i << " = ";
-
-            if (dist[i] == INT_MAX)
-                cout << "INF";
-            else
-                cout << dist[i];
-
-            cout << endl;
-        }
+        cout << endl;
     }
 
     return 0;
